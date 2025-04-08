@@ -1,9 +1,34 @@
-import React, { useState } from 'react'
+import React, { useContext, useState, useRef, useEffect } from 'react'
 import logo from "../imgs/logo.png";
 import {Link, Outlet} from "react-router-dom";
+import { UserContext } from '../App';
+import { removeFromSession } from '../common/session';
 const Navbar = () => {
 
   const [searchBoxVisibility, setSearchBoxVisibility] = useState(false)
+  const {userAuth, userAuth: {access_token, profile_img, username}, setUserAuth} = useContext(UserContext);
+
+  const [showMenu, setShowMenu] = useState(false);
+    const menuRef = useRef();
+
+    useEffect(() => {
+    const handleClickOutside = (event) => {
+        if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setShowMenu(false);
+        }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+    };
+    }, []);
+
+
+  const signOutUser = () => {
+    removeFromSession("user");
+    setUserAuth({access_token: null})
+  }
+
   return (
     <>
     <nav className="navbar">
@@ -30,13 +55,55 @@ const Navbar = () => {
             <p>Write</p>
             </Link>
 
-            <Link to="/signin" className='btn-dark py-2'>
-            SignIn
-            </Link>
-            <Link to="/signup" className='btn-light py-2 md:block'>
-            SignUp
-            </Link>
+            {
+                access_token ? (
+                    <div className="relative" ref={menuRef}>
+                    <button
+                        className="w-12 h-12 mt-1"
+                        onClick={() => setShowMenu((prev) => !prev)}
+                    >
+                        <img
+                        src={profile_img}
+                        alt="profile"
+                        className="w-full h-full object-cover rounded-full"
+                        />
+                    </button>
 
+                    {showMenu && (
+                        <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md z-50">
+                        <Link
+                            to="/dashboard/blogs"
+                            className="block px-4 py-3 text-sm text-black hover:bg-gray-100"
+                            onClick={() => setShowMenu(false)}
+                        >
+                            Dashboard
+                        </Link>
+
+                        <button
+                            onClick={() => {
+                            signOutUser();
+                            setShowMenu(false);
+                            }}
+                            className="w-full text-left px-4 py-3 text-sm hover:bg-gray-100"
+                        >
+                            <h1 className="font-bold text-black">Sign Out</h1>
+                            <p className="text-dark-grey text-sm">@{username}</p>
+                        </button>
+                        </div>
+                    )}
+                    </div>
+
+                )
+                :
+                <>
+                    <Link to="/signin" className='btn-dark py-2'>
+                    SignIn
+                    </Link>
+                    <Link to="/signup" className='btn-light py-2 md:block'>
+                    SignUp
+                    </Link>
+                </>
+            }
         </div>
     </nav>
     <Outlet/>
