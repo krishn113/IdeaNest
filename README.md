@@ -69,7 +69,7 @@ npm start
 ### 3️⃣ Frontend Setup
 
 ```bash
-cd frontend/expense-tracker
+cd frontend
 npm install
 npm run dev
 ```
